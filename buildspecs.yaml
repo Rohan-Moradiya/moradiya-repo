@@ -1,0 +1,27 @@
+version: 0.2
+ 
+phases:
+  install:
+    runtime-versions:
+      python: 3.9
+    commands:
+      - echo Installing dependencies...
+      - pip install flask
+ 
+  build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/q9q7w9i7
+      - echo Building the Docker image...
+      - docker build -t moradiya-repo .
+      - echo Tagging the Docker image...
+      - docker tag moradiya-repo:latest public.ecr.aws/q9q7w9i7/moradiya-repo:latest
+      - echo Pushing the Docker image to Amazon ECR...
+      - docker push public.ecr.aws/q9q7w9i7/moradiya-repo:latest
+      - echo Creating imageDefinitions.json for ECS deployment...
+      - echo '[{"name":"moradiya-flask-app","imageUri":"public.ecr.aws/q9q7w9i7/moradiya-repo:latest"}]' > imageDefinitions.json
+ 
+artifacts:
+  files:
+    - app.py
+    - imageDefinitions.json
